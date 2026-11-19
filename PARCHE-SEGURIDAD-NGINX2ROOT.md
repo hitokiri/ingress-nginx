@@ -62,6 +62,7 @@ La versión de NGINX sigue siendo 1.27.1. `nginx -V` mostrará `1.27.1` y es lo 
    `go mod tidy` no cambió dependencias.
 4. Remotes de git: `origin` apunta a `https://github.com/hitokiri/ingress-nginx` (el fork) y
    `upstream` al repo original `kubernetes/ingress-nginx`.
+5. El trabajo se hizo en la rama `security/nginx2root` y se mergeó a `main` del fork.
 
 ## Verificación realizada
 
@@ -111,6 +112,30 @@ ARCH=amd64 build/run-in-docker.sh PKG=k8s.io/ingress-nginx ARCH=amd64 COMMIT_SHA
   "GOFLAGS='-buildvcs=false -p=1'" test/test.sh
 ```
 
+## Prueba en cluster local (siguiente paso)
+
+Las imágenes `local/...` solo existen en el Docker local. Hay que cargarlas al cluster:
+
+```bash
+kind create cluster --name ingress-test
+kind load docker-image local/ingress-nginx/controller:v1.15.2-cikume --name ingress-test
+
+helm install ingress-nginx charts/ingress-nginx -n ingress-nginx --create-namespace \
+  --set controller.image.registry=local \
+  --set controller.image.image=ingress-nginx/controller \
+  --set controller.image.tag=v1.15.2-cikume \
+  --set controller.image.digest="" \
+  --set controller.image.pullPolicy=Never
+
+# Suite e2e completa (tarda horas)
+make kind-e2e-test
+```
+
+Qué validar:
+- El pod arranca y `nginx -V` dentro del pod muestra 1.27.1.
+- Que haya tráfico HTTP/2 y HTTP/1.1 a un Ingress de prueba.
+- Que `use-http2: "true"` (el default) no genere errores en los logs.
+
 ## Mitigación mientras se despliega
 
 Desactivar HTTP/2 en el ConfigMap del controlador. Esto cierra CVE-2026-123007 y CVE-2026-123633:
@@ -122,7 +147,9 @@ data:
 
 ## Pendiente / recomendaciones
 
-- Correr los e2e con kind antes de producción y escanear la imagen con Trivy.
+- Probar en un cluster local (ver la sección anterior), correr los e2e con kind y escanear la imagen
+  con Trivy antes de producción.
+- Publicar las imágenes en un registry propio (hoy solo existen localmente).
 - Revisar la CVE-2026-116472 (anotación `mirror-target`, severidad baja). Mitigación: usar
   `annotations-risk-level` Medium/Low o bloquear la anotación.
 - Plan de fondo: migrar a un controlador mantenido (Gateway API, Traefik, F5 NGINX Ingress, etc.).
