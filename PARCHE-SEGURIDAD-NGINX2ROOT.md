@@ -145,6 +145,32 @@ data:
   use-http2: "false"
 ```
 
+## Actualización 2026-11-25: revisión de SUSE y bump de OpenTelemetry
+
+### Revisión del fork de SUSE (`v1.15.2-prime6` y `prime7`, 2026-11-19)
+
+- **#248**: SUSE añadió los parches 52–57, uno por CVE del resto de NGINX2Root (123634, 121810,
+  118899, 125283, 120967, 123640). Nosotros los cubrimos en nuestro parche `52_` combinado.
+  - Se aplicaron los dos juegos de parches sobre nginx 1.27.1 y se compararon los árboles. El código
+    queda **idéntico**, salvo `src/mail/*`. Nosotros incluimos CVE-2026-113425 (mail) y SUSE no;
+    ingress no compila mail, así que no hay diferencia práctica. **No se copió nada.**
+- **#247**: añade el proveedor FIPS de OpenSSL a su imagen SLE (`packages.txt`). **No aplica**:
+  nuestra imagen es Alpine.
+- **#249**: workflow de CI para vigilar CVE de nginx. No se copió.
+
+### Bump de OpenTelemetry Go (CVE-2026-128085)
+
+- `go.opentelemetry.io/otel` y `otel/trace` se subieron de v1.42.0 a **v1.47.0**, la versión corregida
+  según [GHSA-q7gw-24fr-5p69](https://github.com/open-telemetry/opentelemetry-go/security/advisories/GHSA-q7gw-24fr-5p69).
+  Es el mismo cambio que el PR #250 de SUSE, que seguía abierto en esa fecha.
+- Por la resolución de versiones de Go también suben testify (1.12.1), logr (1.4.4) y yaml/v3
+  (3.0.5): son las versiones mínimas que exige otel 1.47. Solo cambian `go.mod` y `go.sum`.
+- `go mod why` muestra que otel solo entra por `test/e2e` (vía grpc), no por el binario del controlador.
+  El bump es preventivo y evita alertas de los escáneres.
+- Verificación: `go build ./...` OK con Go 1.26.11. Unit tests (`test/test.sh`, en serie):
+  **67 paquetes OK, 0 fallos**.
+- Commit `35416dd19`, de la rama `security/otel-v1.47.0`, integrado en `main` del fork por fast-forward.
+
 ## Pendiente / recomendaciones
 
 - Probar en un cluster local (ver la sección anterior), correr los e2e con kind y escanear la imagen
@@ -158,7 +184,8 @@ data:
 
 - https://nginx.org/en/security_advisories.html
 - https://nginx.org/en/CHANGES-1.30
-- https://github.com/rancher/ingress-nginx (tag `v1.15.2-prime5`)
+- https://github.com/rancher/ingress-nginx (tags `v1.15.2-prime5` a `prime7`, PR #250)
+- https://github.com/open-telemetry/opentelemetry-go/security/advisories/GHSA-q7gw-24fr-5p69
 - https://github.com/kubernetes/kubernetes/issues/143852
 - https://www.upwind.io/blog/nginx-cve-2026-123007-and-cve-2026-123633-four-web-facing-rces-one-patch-and-where-kubernetes-is-exposed
 - https://blog.qualys.com/product-tech/patch-management/2026/11/18/nginx2root-five-nginx-flaws-led-by-cve-2026-123007-how-to-find-mitigate-and-patch-now
