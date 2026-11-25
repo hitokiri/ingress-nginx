@@ -1,3 +1,31 @@
+# Fork con parches de seguridad (v1.15.2)
+
+Este fork mantiene ingress-nginx **v1.15.1** (la última versión oficial) con parches de seguridad propios:
+
+- **NGINX 1.27.1** con los fixes de NGINX2Root (CVE-2026-123007, 123633 y el resto del lote de nginx 1.30.7)
+  y las CVE de nginx publicadas antes en 2026, alineado con el fork de SUSE/Rancher.
+- **Go 1.26.11**, **OpenTelemetry Go 1.47.0** y **`golang.org/x/net` 0.62.0**.
+- Sin CVE críticas ni altas **con fix disponible** según Docker Scout.
+
+| | |
+|---|---|
+| Imagen | `docker.io/hikohitokiri/ingress-nginx-controller:v1.15.2` |
+| Digest | `sha256:94aae840697d408f0932cb30e9dd9a1ed4cd6b554b0e42d2bfd7ca96eebe3936` |
+| Detalle del parche y pruebas | [PARCHE-SEGURIDAD-NGINX2ROOT.md](PARCHE-SEGURIDAD-NGINX2ROOT.md) |
+| Escaneo de vulnerabilidades | [security/scans/](security/scans/README.md) |
+
+Para usarla con el chart:
+
+```bash
+helm install ingress-nginx charts/ingress-nginx -n ingress-nginx --create-namespace \
+  --set controller.image.registry=docker.io \
+  --set controller.image.image=hikohitokiri/ingress-nginx-controller \
+  --set controller.image.tag=v1.15.2 \
+  --set controller.image.digest=sha256:94aae840697d408f0932cb30e9dd9a1ed4cd6b554b0e42d2bfd7ca96eebe3936
+```
+
+---
+
 # Ingress NGINX Retirement
 
 ## Retiring

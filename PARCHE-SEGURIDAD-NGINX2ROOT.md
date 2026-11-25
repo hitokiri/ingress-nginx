@@ -202,6 +202,7 @@ data:
   `sha256:94aae840697d408f0932cb30e9dd9a1ed4cd6b554b0e42d2bfd7ca96eebe3936`.
 - Construida desde `main` en `c3c540f0b` con `TAG=v1.15.2`; `--version` muestra `Release: v1.15.2`.
 - La imagen base `nginx:v2.2.9-cikume` sigue solo en local; solo hace falta para volver a construir.
+- Reportes de Docker Scout de esta imagen (Markdown, SARIF y quickview): [security/scans/](security/scans/README.md).
 
 ### Prueba en cluster local (2026-11-25, k3d `k3d-mi-laboratorio`, Kubernetes v1.27.4)
 
