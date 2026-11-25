@@ -186,6 +186,46 @@ data:
   `libxml2` 2.13.9-r1 (CVE-2026-86140, alta). Hay que revisarlos cuando Alpine publique fixes.
 - Ojo: Scout no ve el nginx compilado desde código (no es un paquete apk). Que no reporte CVE de
   nginx no prueba nada; la cobertura de NGINX2Root se verificó con los parches y los tests.
+- Los tres paquetes sin fix **no se usan con la configuración por defecto** (verificado con `ldd`):
+  - `grpc` y `protobuf` solo los enlaza `otel_ngx_module.so`, que se carga únicamente con
+    `enable-opentelemetry: "true"` o con la anotación del mismo nombre (`nginx.tmpl:32-34`). Por defecto
+    está en `false`.
+  - `libxml2` solo lo usan ModSecurity (se carga solo con `enable-modsecurity`) y njs (el template no
+    lo carga nunca).
+  - Ni el binario de `nginx` ni el del controlador enlazan ninguna de las tres.
+- Alternativas de Alpine revisadas: en 3.24 solo se corrige grpc, y además aparece una alta en `musl`.
+  Edge (3.25 alpha) corrige las tres, pero no sirve para producción. Por ahora se mantiene 3.23.
+
+### Imagen publicada
+
+- **`hikohitokiri/ingress-nginx-controller:v1.15.2`** en Docker Hub (repo público), con digest
+  `sha256:94aae840697d408f0932cb30e9dd9a1ed4cd6b554b0e42d2bfd7ca96eebe3936`.
+- Construida desde `main` en `c3c540f0b` con `TAG=v1.15.2`; `--version` muestra `Release: v1.15.2`.
+- La imagen base `nginx:v2.2.9-cikume` sigue solo en local; solo hace falta para volver a construir.
+
+### Prueba en cluster local (2026-11-25, k3d `k3d-mi-laboratorio`, Kubernetes v1.27.4)
+
+- Instalación con el chart del repo y la imagen de Docker Hub, en el namespace `ingress-nginx-test`.
+  Se usó la IngressClass propia `nginx-test` y Service `ClusterIP` con port-forward, para convivir
+  con el Traefik del cluster sin tocarlo.
+- Backend `agnhost netexec`, con Ingress y TLS (certificado autofirmado de `test.local`).
+
+| Prueba | Resultado |
+|---|---|
+| Pod del controlador | `Running`, 0 reinicios |
+| `nginx -V` en el pod | 1.27.1 |
+| HTTP/1.1 por el puerto 80 | 308, redirige a HTTPS |
+| HTTPS con HTTP/1.1 y con HTTP/2 | 200 / 200 |
+| Versión de TLS | TLSv1.3 (`TLS_AES_256_GCM_SHA384`) |
+| POST de 200 KB por HTTP/2 + TLS 1.3 (caso de CVE-2026-118899) | 200 |
+| 50 peticiones HTTP/2 en paralelo | 50 × 200 |
+| Errores `crit`, `alert`, `emerg` o `signal` en logs | 0 |
+
+- En los logs del controlador solo hubo avisos normales: los del arranque (el backend aún sin endpoints
+  y el secret TLS sin sincronizar) y los de que el certificado de prueba, de un día, vence pronto.
+  No hubo errores por la versión de Kubernetes, aunque la v1.15 solo está soportada oficialmente
+  desde la 1.31.
+- **No cubierto:** la suite e2e, pruebas de carga reales, ni OpenTelemetry o ModSecurity activados.
 
 ## Documentación
 
@@ -200,9 +240,11 @@ data:
 
 ## Pendiente / recomendaciones
 
-- Probar en un cluster local (ver la sección anterior), correr los e2e con kind y escanear la imagen
-  con Trivy antes de producción.
-- Publicar las imágenes en un registry propio (hoy solo existen localmente).
+- ~~Probar en un cluster local~~: hecho el 2026-11-25 en k3d. ~~Escanear la imagen~~: hecho con Docker Scout.
+  Falta correr los e2e con kind antes de producción.
+- ~~Publicar la imagen~~: el controlador está en Docker Hub (`hikohitokiri/ingress-nginx-controller:v1.15.2`).
+- Revisar `grpc`, `protobuf` y `libxml2` cuando Alpine 3.23 o 3.24 publique fixes, y en los clusters
+  confirmar que OpenTelemetry y ModSecurity no estén activados.
 - Revisar la CVE-2026-116472 (anotación `mirror-target`, severidad baja). Mitigación: usar
   `annotations-risk-level` Medium/Low o bloquear la anotación.
 - Plan de fondo: migrar a un controlador mantenido (Gateway API, Traefik, F5 NGINX Ingress, etc.).
