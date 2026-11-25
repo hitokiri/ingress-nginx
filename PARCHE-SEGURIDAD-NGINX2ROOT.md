@@ -171,6 +171,33 @@ data:
   **67 paquetes OK, 0 fallos**.
 - Commit `35416dd19`, de la rama `security/otel-v1.47.0`, integrado en `main` del fork por fast-forward.
 
+### Escaneo con Docker Scout y bump de `golang.org/x/*`
+
+- Se reconstruyó el controlador con el bump de otel, reutilizando la base `nginx:v2.2.9-cikume` sin cambios.
+  `docker scout` encontró 2 críticas y 9 altas con fix, todas en librerías Go:
+  `golang.org/x/net` 0.52.0 (CVE-2026-39821, 78663, 97032, 78669, 78661, 78660, 78659, 46600, 33814)
+  y `golang.org/x/text` 0.35.0 (CVE-2026-56852, 56851).
+- Se subió `x/net` a **v0.62.0**. Por sus requisitos mínimos también suben `x/text` 0.43.0, `x/crypto`
+  0.58.0, `x/sys` 0.49.0, `x/term` 0.47.0, `x/sync` 0.24.0, `x/mod` 0.41.0 y `x/tools` 0.51.0.
+- Verificación: `go build ./...` OK; unit tests **67 paquetes OK, 0 fallos**; imagen reconstruida,
+  `nginx -t` OK. Scout ya no reporta **ninguna crítica ni alta con fix**.
+- **Quedan sin fix** (paquetes de Alpine 3.23, sin versión corregida publicada):
+  `grpc` 1.76.0-r2 (CVE-2026-33186, crítica), `protobuf` 31.1-r1 (CVE-2026-0994, alta) y
+  `libxml2` 2.13.9-r1 (CVE-2026-86140, alta). Hay que revisarlos cuando Alpine publique fixes.
+- Ojo: Scout no ve el nginx compilado desde código (no es un paquete apk). Que no reporte CVE de
+  nginx no prueba nada; la cobertura de NGINX2Root se verificó con los parches y los tests.
+
+## Documentación
+
+- **Oficial (congelada):** <https://kubernetes.github.io/ingress-nginx/>. Sigue en línea, pero el repo
+  `kubernetes/ingress-nginx` está archivado y el último deploy es del 2026-03-19. Sigue siendo la
+  referencia completa de anotaciones y ConfigMap.
+- **Copia local:** `docs/` de este repo (MkDocs, con `requirements.txt`), por si el sitio desaparece.
+- **SUSE:** `rancher/ingress-nginx` no publica documentación propia; no tiene GitHub Pages. Lo más
+  cercano es la doc de RKE2: <https://docs.rke2.io/networking/networking_services>. Explica cómo RKE2
+  empaqueta ingress-nginx; en RKE2 v1.36 queda obsoleto y en v1.37 se elimina para clusters nuevos.
+  El soporte extendido es solo con Rancher Prime.
+
 ## Pendiente / recomendaciones
 
 - Probar en un cluster local (ver la sección anterior), correr los e2e con kind y escanear la imagen
