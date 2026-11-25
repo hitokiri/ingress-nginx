@@ -1,5 +1,7 @@
 # Parche de seguridad NGINX2Root — ingress-nginx 1.15.1 (build propio)
 
+🇬🇧 [English version](SECURITY-PATCH-NGINX2ROOT.md)
+
 Fecha: 2026-11-18
 
 ## Contexto
@@ -195,6 +197,22 @@ data:
   - Ni el binario de `nginx` ni el del controlador enlazan ninguna de las tres.
 - Alternativas de Alpine revisadas: en 3.24 solo se corrige grpc, y además aparece una alta en `musl`.
   Edge (3.25 alpha) corrige las tres, pero no sirve para producción. Por ahora se mantiene 3.23.
+- **CVE-2026-33186 es probablemente un falso positivo.** Según la
+  [ficha de SUSE](https://www.suse.com/security/cve/CVE-2026-33186/), es un fallo del **servidor de
+  gRPC-Go** (validación de `:path` en HTTP/2), corregido en gRPC-Go 1.79.3. No es de la librería C++ de
+  Alpine, que aquí solo actúa como cliente de OpenTelemetry. El controlador ya usa
+  `google.golang.org/grpc v1.79.3`.
+
+### Comparación con la imagen de SUSE (`v1.15.2-prime7`)
+
+- Imagen `registry.rancher.com/rancher/nginx-ingress-controller:v1.15.2-prime7`, basada en SLES 16.0.
+  Scout le da 0 críticas, 0 altas y 2 medias. Las 2 medias son OpenTelemetry Go 1.45.0
+  (CVE-2026-128085 y 128086): SUSE no ha mergeado su PR #250, y nosotros ya estamos en 1.47.0.
+- **No está realmente más limpia.** Trae versiones más viejas (grpc 1.60.0, protobuf 28.3, libxml2
+  2.13.8), pero Scout tiene menos datos de SLES 16. Según la base de CVE de SUSE para SLES 16.0:
+  - CVE-2026-86140 (libxml2) está "In progress": su imagen también es vulnerable, pero Scout no la reporta.
+  - CVE-2026-0994 (protobuf) ya tiene fix publicado por SUSE.
+- Reportes de Scout de ambas imágenes y tabla comparativa: [security/scans/](security/scans/README.es.md).
 
 ### Imagen publicada
 
@@ -202,7 +220,7 @@ data:
   `sha256:94aae840697d408f0932cb30e9dd9a1ed4cd6b554b0e42d2bfd7ca96eebe3936`.
 - Construida desde `main` en `c3c540f0b` con `TAG=v1.15.2`; `--version` muestra `Release: v1.15.2`.
 - La imagen base `nginx:v2.2.9-cikume` sigue solo en local; solo hace falta para volver a construir.
-- Reportes de Docker Scout de esta imagen (Markdown, SARIF y quickview): [security/scans/](security/scans/README.md).
+- Reportes de Docker Scout de esta imagen (Markdown, SARIF y quickview): [security/scans/](security/scans/README.es.md).
 
 ### Prueba en cluster local (2026-11-25, k3d `k3d-mi-laboratorio`, Kubernetes v1.27.4)
 
@@ -256,6 +274,7 @@ data:
 - https://nginx.org/en/CHANGES-1.30
 - https://github.com/rancher/ingress-nginx (tags `v1.15.2-prime5` a `prime7`, PR #250)
 - https://github.com/open-telemetry/opentelemetry-go/security/advisories/GHSA-q7gw-24fr-5p69
+- https://www.suse.com/security/cve/CVE-2026-33186/ · https://www.suse.com/security/cve/CVE-2026-0994/ · https://www.suse.com/security/cve/CVE-2026-86140/
 - https://github.com/kubernetes/kubernetes/issues/143852
 - https://www.upwind.io/blog/nginx-cve-2026-123007-and-cve-2026-123633-four-web-facing-rces-one-patch-and-where-kubernetes-is-exposed
 - https://blog.qualys.com/product-tech/patch-management/2026/11/18/nginx2root-five-nginx-flaws-led-by-cve-2026-123007-how-to-find-mitigate-and-patch-now

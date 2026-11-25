@@ -1,20 +1,20 @@
-# Fork con parches de seguridad (v1.15.2)
+# Security-patched fork (v1.15.2)
 
-Este fork mantiene ingress-nginx **v1.15.1** (la última versión oficial) con parches de seguridad propios:
+This fork keeps ingress-nginx **v1.15.1** (the last official release) alive with its own security patches:
 
-- **NGINX 1.27.1** con los fixes de NGINX2Root (CVE-2026-123007, 123633 y el resto del lote de nginx 1.30.7)
-  y las CVE de nginx publicadas antes en 2026, alineado con el fork de SUSE/Rancher.
-- **Go 1.26.11**, **OpenTelemetry Go 1.47.0** y **`golang.org/x/net` 0.62.0**.
-- Sin CVE críticas ni altas **con fix disponible** según Docker Scout.
+- **NGINX 1.27.1** with the NGINX2Root fixes (CVE-2026-123007, 123633 and the rest of the nginx 1.30.7 batch)
+  and the nginx CVEs published earlier in 2026, aligned with the SUSE/Rancher fork.
+- **Go 1.26.11**, **OpenTelemetry Go 1.47.0** and **`golang.org/x/net` 0.62.0**.
+- No critical or high CVEs **with a fix available**, according to Docker Scout.
 
 | | |
 |---|---|
-| Imagen | `docker.io/hikohitokiri/ingress-nginx-controller:v1.15.2` |
+| Image | `docker.io/hikohitokiri/ingress-nginx-controller:v1.15.2` |
 | Digest | `sha256:94aae840697d408f0932cb30e9dd9a1ed4cd6b554b0e42d2bfd7ca96eebe3936` |
-| Detalle del parche y pruebas | [PARCHE-SEGURIDAD-NGINX2ROOT.md](PARCHE-SEGURIDAD-NGINX2ROOT.md) |
-| Escaneo de vulnerabilidades | [security/scans/](security/scans/README.md) |
+| Patch details and tests | [SECURITY-PATCH-NGINX2ROOT.md](SECURITY-PATCH-NGINX2ROOT.md) · 🇪🇸 [PARCHE-SEGURIDAD-NGINX2ROOT.md](PARCHE-SEGURIDAD-NGINX2ROOT.md) |
+| Vulnerability scans (incl. comparison with SUSE) | [security/scans/](security/scans/README.md) · 🇪🇸 [README.es.md](security/scans/README.es.md) |
 
-Para usarla con el chart:
+To use it with the chart:
 
 ```bash
 helm install ingress-nginx charts/ingress-nginx -n ingress-nginx --create-namespace \

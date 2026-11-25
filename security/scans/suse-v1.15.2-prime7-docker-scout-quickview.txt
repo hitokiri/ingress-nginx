@@ -1,0 +1,23 @@
+
+ Target     │  registry.rancher.com/rancher/nginx-ingress-controller:v1.15.2-prime7  │    0C     0H     2M     0L  
+   digest   │  df37231a76d7                                                          │                             
+ Base image │  docker/buildkit-syft-scanner:stable-1                                 │                             
+
+Policy status  FAILED  (5/7 policies met)
+Health score  B  (78%)
+
+ Status │                   Policy                    │           Results           
+────────┼─────────────────────────────────────────────┼─────────────────────────────
+ ✓      │ Default non-root user                       │                             
+ !      │ Copyleft licensed packages found            │    63 packages              
+ ✓      │ No fixable critical or high vulnerabilities │    0C     0H     0M     0L  
+ ✓      │ No high-profile vulnerabilities             │    0C     0H     0M     0L  
+ ✓      │ No outdated base images                     │                             
+ !      │ Unapproved base images found                │    1 deviation              
+ ✓      │ Supply chain attestations                   │    0 deviations             
+
+What's next:
+    View policy violations → docker scout policy registry.rancher.com/rancher/nginx-ingress-controller:v1.15.2-prime7
+    View vulnerabilities → docker scout cves registry.rancher.com/rancher/nginx-ingress-controller:v1.15.2-prime7
+    Compare with the latest in the registry → docker scout compare --to-latest registry.rancher.com/rancher/nginx-ingress-controller:v1.15.2-prime7
+
